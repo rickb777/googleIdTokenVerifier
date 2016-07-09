@@ -1,14 +1,15 @@
 # GoogleIdTokenVerifier
-To validate an Google ID Token in Golang
+Use this API to validate a Google ID Token in [Go](https://golang.org/).
 
 Usage:
 
 ```
 authToken := "XXXXXXXXXXX.XXXXXXXXXXXX.XXXXXXXXXX"
 
-certs := getCerts(getCertsFromURL())
+certs, err := GetCertsFromURL()
+// ...  error handling
 
 aud := "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com"
 
-fmt.Println(verifyGoogleIDToken(authToken, certs, aud))
+fmt.Println(VerifyGoogleIDToken(authToken, certs, aud))
 ```
