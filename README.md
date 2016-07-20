@@ -13,3 +13,27 @@ aud := "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com"
 
 fmt.Println(VerifyGoogleIDToken(authToken, certs, aud))
 ```
+
+Fetching the certificates for Google servers takes some time. You can cache them in a local file for several days:
+
+```
+bytes, err := GetCertsBytesFromURL()
+// ...  error handling
+
+err = ioutil.WriteFile(cacheFileName, bytes, 0644)
+// ...  error handling
+```
+
+Then use the cache:
+
+```
+bytes, err := ioutil.ReadFile(cache)
+if os.IsNotExist(err) {
+    err = downloadAndCacheGoogleCerts()
+}
+// ...  error handling
+
+certs, err = ParseCerts(bytes)
+// ...  error handling
+```
+
