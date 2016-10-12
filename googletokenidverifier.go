@@ -9,16 +9,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"math/big"
-	"net/http"
 	"strings"
 	"time"
 )
-
-const GoogleCertURL = "https://www.googleapis.com/oauth2/v3/certs"
 
 // Certs is
 type Certs struct {
@@ -55,17 +50,17 @@ type TokenInfo struct {
 // https://developers.google.com/identity/sign-in/web/backend-auth
 // https://github.com/google/oauth2client/blob/master/oauth2client/crypt.py
 
-// VerifyGoogleIDToken is
+// VerifyGoogleIDToken verifies the authentication token received by the Google client (typically Javascript code).
 func VerifyGoogleIDToken(authToken string, certs *Certs, audience string) (*TokenInfo, error) {
 	header, payload, signature, messageToSign := divideAuthToken(authToken)
-	fmt.Printf("authToken\n  header %s\n  payload %s\n  signature %v\n  messageToSign %v\n", string(header), string(payload), signature, messageToSign)
+	logf("authToken\n  header %s\n  payload %s\n  signature %v\n  messageToSign %v\n", string(header), string(payload), signature, messageToSign)
 
 	token, err := getTokenInfo(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("token %#v\n", token)
+	logf("token %#v\n", token)
 	if audience != token.Aud {
 		return nil, errors.New("Invalid token: incorrect audience.")
 	}
@@ -107,31 +102,6 @@ func checkTime(tokeninfo *TokenInfo) bool {
 		return false
 	}
 	return true
-}
-
-//GetCertsFromURL is obtained Google's public keys.
-func GetCertsFromURL() (*Certs, error) {
-	bytes, err := GetCertsBytesFromURL()
-	if err != nil {
-		return nil, err
-	}
-	return ParseCerts(bytes)
-}
-
-func GetCertsBytesFromURL() ([]byte, error) {
-	res, err := http.Get(GoogleCertURL)
-	if err != nil {
-		return nil, err
-	}
-	certs, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	return certs, err
-}
-
-func ParseCerts(bytes []byte) (*Certs, error) {
-	var certs Certs
-	err := json.Unmarshal(bytes, &certs)
-	return &certs, err
 }
 
 func urlsafeB64decode(str string) []byte {
@@ -193,4 +163,3 @@ func a5(bt []byte) *big.Int {
 	a.SetBytes(bt)
 	return a
 }
-
