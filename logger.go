@@ -1,9 +1,10 @@
-package GoogleIdTokenVerifier
+package googleIdTokenVerifier
 
 import (
 	"log"
 )
 
+var Verbose = false
 var logger *log.Logger
 
 // SetLogger changes the logger used for the verification messages
@@ -17,5 +18,7 @@ func SetLogger(l *log.Logger) {
 func logf(fmt string, args ...interface{}) {
 	if logger != nil {
 		logger.Printf(fmt, args...)
+	} else if Verbose {
+		log.Printf(fmt, args...)
 	}
 }

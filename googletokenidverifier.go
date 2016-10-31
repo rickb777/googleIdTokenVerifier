@@ -1,4 +1,4 @@
-package GoogleIdTokenVerifier
+package googleIdTokenVerifier
 
 import (
 	"bytes"
@@ -15,18 +15,18 @@ import (
 	"time"
 )
 
-// Certs is
-type Certs struct {
-	Keys []keys `json:"keys"`
+type Key struct {
+	Kty string           `json:"kty"`
+	Alg string           `json:"alg"`
+	Use string           `json:"use"`
+	Kid string           `json:"kid"`
+	N   string           `json:"n"`
+	E   string           `json:"e"`
+	Key crypto.PublicKey `json:"-"`
 }
 
-type keys struct {
-	Kty string `json:"kty"`
-	Alg string `json:"alg"`
-	Use string `json:"use"`
-	Kid string `json:"kid"`
-	N   string `json:"n"`
-	E   string `json:"e"`
+type Certs struct {
+	Keys []Key `json:"keys"`
 }
 
 // TokenInfo is
@@ -112,17 +112,17 @@ func urlsafeB64decode(str string) []byte {
 	return bt
 }
 
-func choiceKeyByKeyID(kk []keys, tokenKid string) (keys, error) {
+func choiceKeyByKeyID(kk []Key, tokenKid string) (Key, error) {
 	for _, k := range kk {
 		if k.Kid == tokenKid {
 			return k, nil
 		}
 	}
-	return keys{}, errors.New("Invalid token: mismatched cert key id.")
+	return Key{}, errors.New("Invalid token: mismatched cert key id.")
 }
 
 func getAuthTokenKeyID(bt []byte) (string, error) {
-	var keys keys
+	var keys Key
 	err := json.Unmarshal(bt, &keys)
 	if err != nil {
 		return "", err

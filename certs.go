@@ -1,12 +1,12 @@
-package GoogleIdTokenVerifier
+package googleIdTokenVerifier
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"time"
 	"os"
 	"sync"
+	"time"
 )
 
 const GoogleCertURL = "https://www.googleapis.com/oauth2/v3/certs"
@@ -21,8 +21,8 @@ func cacheFileName() string {
 	return os.TempDir() + "/" + CacheFile
 }
 
-func getCachedCertsFromFile() *Certs {
-	b, err := ioutil.ReadFile(cacheFileName())
+func getCachedCertsFromFile(name string) *Certs {
+	b, err := ioutil.ReadFile(name)
 	if err == nil {
 		c, err := ParseCerts(b)
 		if err == nil {
@@ -43,7 +43,7 @@ func GetCachedCertsFromURL(cacheLifetime time.Duration) (*Certs, error) {
 	needRefresh := now.After(nextCacheRefresh)
 
 	if certCache == nil && !needRefresh {
-		certCache = getCachedCertsFromFile()
+		certCache = getCachedCertsFromFile(cacheFileName())
 	}
 
 	if certCache == nil || needRefresh {

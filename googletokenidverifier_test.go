@@ -1,8 +1,9 @@
-package GoogleIdTokenVerifier
+package googleIdTokenVerifier
 
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -80,6 +81,51 @@ func testGetCertsFromURLWithoutCache(t *testing.T) {
 	err = ioutil.WriteFile(CacheFile, bytes, 0644)
 	if err != nil {
 		t.Fatalf("got %v", err)
+	}
+}
+
+func TestGetCachedKeyByKeyID_whenNotMatched(t *testing.T) {
+	_, err := ioutil.ReadFile(CacheFile)
+	if os.IsNotExist(err) {
+		testGetCertsFromURLWithoutCache(t)
+	} else if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	_, err = GetCachedKeyByKeyID("XX", "YY", time.Hour)
+	if err == nil {
+		t.Errorf("expected error")
+	} else {
+		m := err.Error()
+		if !strings.HasPrefix(m, "Invalid token:") {
+			t.Errorf(m)
+		}
+	}
+}
+
+func TestGetCachedKeyByKeyID_whenMatched(t *testing.T) {
+	_, err := ioutil.ReadFile(CacheFile)
+	if os.IsNotExist(err) {
+		testGetCertsFromURLWithoutCache(t)
+	} else if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+
+	k0 := certCache.Keys[0]
+	key, err := GetCachedKeyByKeyID(k0.Alg, k0.Kid, time.Hour)
+	if err != nil {
+		t.Fatalf("got %v", err)
+	}
+	if key == nil {
+		t.Fatalf("got nil key")
+	}
+
+	// repeat
+	key, err = GetCachedKeyByKeyID(k0.Alg, k0.Kid, time.Hour)
+	if err != nil {
+		t.Fatalf("got %v", err)
+	}
+	if key == nil {
+		t.Fatalf("got nil key")
 	}
 }
 
