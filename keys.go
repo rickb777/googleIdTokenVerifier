@@ -17,7 +17,7 @@ func GetCachedKeyByKeyID(alg, kid string, cacheLifetime time.Duration) (crypto.P
 			switch k.Kty {
 			case "RSA":
 				if k.Key == nil {
-					k.Key = &rsa.PublicKey{N: a5(urlsafeB64decode(k.N)), E: a4(a2(urlsafeB64decode(k.E)))}
+					k.Key = &rsa.PublicKey{N: byteToInt(urlsafeB64decode(k.N)), E: btrToInt(byteToBtr(urlsafeB64decode(k.E)))}
 				}
 				return k.Key, nil
 			}

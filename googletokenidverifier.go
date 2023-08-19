@@ -53,14 +53,14 @@ type TokenInfo struct {
 // VerifyGoogleIDToken verifies the authentication token received by the Google client (typically Javascript code).
 func VerifyGoogleIDToken(authToken string, certs *Certs, audience string) (*TokenInfo, error) {
 	header, payload, signature, messageToSign := divideAuthToken(authToken)
-	logf("authToken\n  header %s\n  payload %s\n  signature %v\n  messageToSign %v\n", string(header), string(payload), signature, messageToSign)
+	logf("authToken", "header", string(header), "payload", string(payload), "signature", signature, "messageToSign", messageToSign)
 
 	token, err := getTokenInfo(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	logf("token %#v\n", token)
+	logf("tokenInfo", "token", token)
 	if audience != token.Aud {
 		return nil, errors.New("Invalid token: incorrect audience.")
 	}
@@ -83,7 +83,7 @@ func VerifyGoogleIDToken(authToken string, certs *Certs, audience string) (*Toke
 		return nil, err
 	}
 
-	pKey := rsa.PublicKey{N: a5(urlsafeB64decode(key.N)), E: a4(a2(urlsafeB64decode(key.E)))}
+	pKey := rsa.PublicKey{N: byteToInt(urlsafeB64decode(key.N)), E: btrToInt(byteToBtr(urlsafeB64decode(key.E)))}
 	err = rsa.VerifyPKCS1v15(&pKey, crypto.SHA256, messageToSign, signature)
 	if err != nil {
 		return nil, err
@@ -132,33 +132,33 @@ func getAuthTokenKeyID(bt []byte) (string, error) {
 
 func divideAuthToken(str string) ([]byte, []byte, []byte, []byte) {
 	args := strings.Split(str, ".")
-	return urlsafeB64decode(args[0]), urlsafeB64decode(args[1]), urlsafeB64decode(args[2]), a3(args[0] + "." + args[1])
+	return urlsafeB64decode(args[0]), urlsafeB64decode(args[1]), urlsafeB64decode(args[2]), calcSum(args[0] + "." + args[1])
 }
 
-func a2(bt []byte) *bytes.Reader {
-	var bt2 []byte
-	if len(bt) < 8 {
-		bt2 = make([]byte, 8-len(bt), 8)
-		bt2 = append(bt2, bt...)
+func byteToBtr(bt0 []byte) *bytes.Reader {
+	var bt1 []byte
+	if len(bt0) < 8 {
+		bt1 = make([]byte, 8-len(bt0), 8)
+		bt1 = append(bt1, bt0...)
 	} else {
-		bt2 = bt
+		bt1 = bt0
 	}
-	return bytes.NewReader(bt2)
+	return bytes.NewReader(bt1)
 }
 
-func a3(str string) []byte {
+func calcSum(str string) []byte {
 	a := sha256.New()
 	a.Write([]byte(str))
 	return a.Sum(nil)
 }
 
-func a4(a io.Reader) int {
+func btrToInt(a io.Reader) int {
 	var e uint64
 	binary.Read(a, binary.BigEndian, &e)
 	return int(e)
 }
 
-func a5(bt []byte) *big.Int {
+func byteToInt(bt []byte) *big.Int {
 	a := big.NewInt(0)
 	a.SetBytes(bt)
 	return a
